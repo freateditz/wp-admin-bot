@@ -1,39 +1,50 @@
-// ✅ Connect to your deployed backend on Render
+// Connect to your deployed backend
 const socket = io("https://wp-admin-bot.onrender.com", {
   transports: ["websocket"],
-  reconnection: true,
-  reconnectionAttempts: 10,
 });
 
-const statusDiv = document.getElementById("status");
-const qrImg = document.getElementById("qr-image");
+const statusEl = document.getElementById("status");
+const qrContainer = document.getElementById("qr-container");
+const qrImg = document.getElementById("qr");
+const connectedMsg = document.getElementById("connected");
 
-// Connected to backend
+// When connected to backend
 socket.on("connect", () => {
-  statusDiv.textContent = "Connected to backend ✅";
+  statusEl.textContent = "Connected to backend ✅";
+  statusEl.style.color = "#00ff99";
+  console.log("✅ Connected to backend socket");
 });
 
-// When QR code received
-socket.on("qr", (qrUrl) => {
-  statusDiv.textContent = "Scan the QR below 👇";
-  qrImg.src = qrUrl;
-  qrImg.style.display = "block";
+// When backend disconnects
+socket.on("disconnect", () => {
+  statusEl.textContent = "Disconnected ❌";
+  statusEl.style.color = "#ff3333";
+  qrContainer.classList.add("hidden");
+  connectedMsg.classList.add("hidden");
+  console.log("❌ Disconnected from backend");
+});
+
+// Receive QR from backend
+socket.on("qr", (qrData) => {
+  console.log("📱 QR received");
+  qrContainer.classList.remove("hidden");
+  connectedMsg.classList.add("hidden");
+  qrImg.src = qrData;
+  qrImg.alt = "WhatsApp QR Code";
 });
 
 // When bot is ready
 socket.on("ready", () => {
-  statusDiv.textContent = "✅ WhatsApp Bot is Ready!";
-  qrImg.style.display = "none";
+  qrContainer.classList.add("hidden");
+  connectedMsg.classList.remove("hidden");
+  console.log("🤖 Bot is ready!");
 });
 
-// If backend disconnects
-socket.on("disconnect", () => {
-  statusDiv.textContent = "❌ Disconnected from backend.";
-  qrImg.style.display = "none";
-});
-
-// Handle connection errors
-socket.on("connect_error", (err) => {
-  statusDiv.textContent = "⚠️ Unable to connect to backend.";
-  console.error("Socket connection error:", err);
+// When session is authenticated
+socket.on("authenticated", () => {
+  statusEl.textContent = "Authenticated ✅";
+  statusEl.style.color = "#00ff99";
+  qrContainer.classList.add("hidden");
+  connectedMsg.classList.remove("hidden");
+  console.log("🔐 Authenticated!");
 });

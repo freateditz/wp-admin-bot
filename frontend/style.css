@@ -1,62 +1,72 @@
-/* --- General Page Styling --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-  background-color: #0e1117;
-  color: #e6edf3;
+  background-color: #0d1117;
+  color: #c9d1d9;
   font-family: "Poppins", sans-serif;
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
-/* --- Container --- */
-.container {
-  text-align: center;
-  background: #161b22;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0, 255, 153, 0.3);
-  width: 350px;
-}
-
-/* --- Headings --- */
-h1 {
-  margin-bottom: 20px;
-  color: #00ff99;
-}
-
-/* --- Status Text --- */
-.status {
-  margin-bottom: 15px;
-  font-weight: bold;
-  color: #ffcc00;
-}
-
-/* --- QR Section --- */
-#qr-section {
-  display: flex;
   justify-content: center;
-  margin-bottom: 15px;
+  height: 100vh;
 }
 
-#qr-image {
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  background: #161b22;
+  padding: 2rem 3rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0, 255, 100, 0.2);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 150, 0.4);
+}
+
+h1 {
+  color: #00ff99;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+p {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+#status {
+  color: #ffcc00;
+  font-weight: 500;
+}
+
+#qr-container {
+  margin-top: 1.2rem;
+}
+
+#qr {
   width: 250px;
   height: 250px;
-  border-radius: 8px;
-  display: none;
+  border-radius: 10px;
+  margin-top: 10px;
   border: 2px solid #00ff99;
 }
 
-/* --- Note --- */
-.note {
-  font-size: 14px;
-  color: #9ba3af;
+footer {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: #8b949e;
 }
 
-/* --- Footer --- */
-footer {
-  font-size: 12px;
-  margin-top: 10px;
-  color: #6b7280;
+.hidden {
+  display: none;
 }

@@ -5,28 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WhatsApp Admin Bot</title>
     <link rel="stylesheet" href="style.css" />
-
-    <!-- Socket.io Client -->
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   </head>
   <body>
     <div class="container">
-      <h1>🤖 WhatsApp Admin Bot</h1>
+      <div class="card">
+        <h1>🤖 WhatsApp Admin Bot</h1>
+        <p id="status">Connecting to backend...</p>
 
-      <div id="status" class="status">Connecting to backend...</div>
+        <div id="qr-container" class="hidden">
+          <p>Scan this QR with your WhatsApp to log in</p>
+          <img id="qr" alt="QR Code" />
+        </div>
 
-      <div id="qr-section">
-        <img id="qr-image" src="" alt="Scan this QR code" />
+        <p id="connected" class="hidden">✅ Bot is Ready!</p>
+        <footer>© 2025 WP Admin Bot | Built with ❤️</footer>
       </div>
-
-      <p class="note">
-        Scan this QR with your WhatsApp to log in.<br />
-        Once connected, you’ll see <b>Bot is Ready!</b>
-      </p>
-
-      <footer>© 2025 WP Admin Bot | Built with ❤️</footer>
     </div>
 
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

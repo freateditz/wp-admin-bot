@@ -1,4 +1,4 @@
-// --- Import Required Packages ---
+// --- Imports ---
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -9,29 +9,30 @@ import { Server } from "socket.io";
 import qrcode from "qrcode";
 import pkg from "whatsapp-web.js";
 
-dotenv.config(); // Load environment variables
-
-// Extract CommonJS exports from whatsapp-web.js
+dotenv.config();
 const { Client, LocalAuth } = pkg;
 
-// --- Setup Directory References ---
+// --- Setup directory refs ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// --- Initialize Express and Server ---
+// --- Initialize Express & Socket.io ---
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: "*", // allow all for Render
+    methods: ["GET", "POST"],
+  },
 });
 
-// --- Connect to MongoDB ---
+// --- MongoDB connection (optional) ---
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
+  .catch((err) => console.log("⚠️ MongoDB not connected:", err.message));
 
-// --- Initialize WhatsApp Client ---
+// --- WhatsApp Client ---
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
@@ -40,41 +41,46 @@ const client = new Client({
   },
 });
 
-// --- WhatsApp Event Listeners ---
+// --- WhatsApp Events ---
 client.on("qr", (qr) => {
-  console.log("📱 QR Code received. Scan it with your phone!");
+  console.log("📱 QR Code generated, emitting to frontend...");
   qrcode.toDataURL(qr, (err, url) => {
-    if (err) return console.error("QR generation failed:", err);
-    io.emit("qr", url); // Send QR to frontend via socket
+    if (err) return console.error("QR Error:", err);
+    io.emit("qr", url);
   });
 });
 
 client.on("ready", () => {
-  console.log("🤖 WhatsApp Bot is ready to use!");
+  console.log("🤖 WhatsApp Bot is ready!");
   io.emit("ready");
 });
 
 client.on("authenticated", () => {
-  console.log("🔐 WhatsApp Authenticated!");
+  console.log("🔐 Authenticated!");
+  io.emit("authenticated");
 });
 
-client.on("auth_failure", (msg) => {
-  console.error("❌ Authentication Failed:", msg);
-});
+client.on("auth_failure", (msg) => console.error("❌ Auth failed:", msg));
 
 client.on("disconnected", (reason) => {
-  console.log("⚠️ WhatsApp Disconnected:", reason);
-  client.initialize(); // Reconnect automatically
+  console.log("⚠️ Disconnected:", reason);
+  client.initialize();
 });
 
-// --- Initialize the WhatsApp Client ---
+// --- Initialize WhatsApp ---
 client.initialize();
 
-// --- Basic Routes ---
+// --- Express route ---
 app.get("/", (req, res) => {
-  res.send("✅ WhatsApp Admin Bot Backend is Running!");
+  res.send("✅ Backend is running & connected to WhatsApp bot");
 });
 
-// --- Start Server ---
+// --- Socket connection log ---
+io.on("connection", (socket) => {
+  console.log("🟢 Frontend connected via Socket.io");
+  socket.emit("connected", "Backend socket online ✅");
+});
+
+// --- Start server ---
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
