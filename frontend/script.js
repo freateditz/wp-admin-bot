@@ -1,29 +1,39 @@
-// ✅ Backend URL (your Node.js + Socket.IO server)
-const backendURL = "http://localhost:3000";
+// ✅ Connect to your deployed backend on Render
+const socket = io("https://wp-admin-bot.onrender.com", {
+  transports: ["websocket"],
+  reconnection: true,
+  reconnectionAttempts: 10,
+});
 
-// ✅ Connect to backend socket
-const socket = io(backendURL);
+const statusDiv = document.getElementById("status");
+const qrImg = document.getElementById("qr-image");
 
-// ✅ Get QR div
-const qrDiv = document.getElementById("qr");
-
-// ✅ When connected to backend
+// Connected to backend
 socket.on("connect", () => {
-  console.log("✅ Connected to backend socket");
+  statusDiv.textContent = "Connected to backend ✅";
 });
 
-// ✅ When backend sends QR code
-socket.on("qr", (qrImage) => {
-  qrDiv.innerHTML = `<img src="${qrImage}" alt="QR Code" />`;
+// When QR code received
+socket.on("qr", (qrUrl) => {
+  statusDiv.textContent = "Scan the QR below 👇";
+  qrImg.src = qrUrl;
+  qrImg.style.display = "block";
 });
 
-// ✅ When disconnected
-socket.on("disconnect", () => {
-  console.log("❌ Disconnected from backend");
-  qrDiv.innerHTML = `<p>⚠️ Lost connection to backend.</p>`;
-});
-
-// ✅ When WhatsApp is ready
+// When bot is ready
 socket.on("ready", () => {
-  qrDiv.innerHTML = `<p>✅ WhatsApp Bot is ready!</p>`;
+  statusDiv.textContent = "✅ WhatsApp Bot is Ready!";
+  qrImg.style.display = "none";
+});
+
+// If backend disconnects
+socket.on("disconnect", () => {
+  statusDiv.textContent = "❌ Disconnected from backend.";
+  qrImg.style.display = "none";
+});
+
+// Handle connection errors
+socket.on("connect_error", (err) => {
+  statusDiv.textContent = "⚠️ Unable to connect to backend.";
+  console.error("Socket connection error:", err);
 });

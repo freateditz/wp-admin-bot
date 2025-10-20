@@ -1,43 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WhatsApp Bot Login</title>
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <style>
-    body {
-      background: #0f172a;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
-      padding-top: 50px;
-    }
-    img {
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px #0ea5e9;
-    }
-    h1 { color: #22d3ee; }
-  </style>
-</head>
-<body>
-  <h1>📱 Scan the QR to connect WhatsApp</h1>
-  <div id="status">Waiting for QR...</div>
-  <div id="qr"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatsApp Admin Bot</title>
+    <link rel="stylesheet" href="style.css" />
 
-  <script>
-    const socket = io("https://wp-admin-bot.onrender.com"); // your backend URL
+    <!-- Socket.io Client -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🤖 WhatsApp Admin Bot</h1>
 
-    socket.on("qr", (url) => {
-      document.getElementById("status").innerText = "Scan this QR with WhatsApp";
-      document.getElementById("qr").innerHTML = `<img src="${url}" alt="QR Code" width="300"/>`;
-    });
+      <div id="status" class="status">Connecting to backend...</div>
 
-    socket.on("ready", () => {
-      document.getElementById("status").innerText = "✅ WhatsApp Bot is Ready!";
-      document.getElementById("qr").innerHTML = "";
-    });
-  </script>
-</body>
+      <div id="qr-section">
+        <img id="qr-image" src="" alt="Scan this QR code" />
+      </div>
+
+      <p class="note">
+        Scan this QR with your WhatsApp to log in.<br />
+        Once connected, you’ll see <b>Bot is Ready!</b>
+      </p>
+
+      <footer>© 2025 WP Admin Bot | Built with ❤️</footer>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
 </html>
