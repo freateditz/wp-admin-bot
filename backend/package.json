@@ -1,6 +1,7 @@
 {
   "name": "wp-admin-bot-backend",
   "version": "1.0.0",
+  "description": "WhatsApp Admin Bot Backend",
   "main": "index.js",
   "type": "module",
   "scripts": {
@@ -13,5 +14,8 @@
     "mongoose": "^8.8.1",
     "qrcode": "^1.5.4",
     "whatsapp-web.js": "^1.24.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
