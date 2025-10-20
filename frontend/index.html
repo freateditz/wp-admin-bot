@@ -3,63 +3,41 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WhatsApp Admin Bot</title>
+  <title>WhatsApp Bot Login</title>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      background: #0f172a;
+      color: #fff;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 50px;
     }
-
-    h1 {
-      margin-bottom: 1rem;
-      color: #38bdf8;
-    }
-
-    #qr {
-      background: #1e293b;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 300px;
-      min-height: 300px;
-    }
-
     img {
-      width: 300px;
-      height: 300px;
-      border-radius: 0.5rem;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #0ea5e9;
     }
-
-    footer {
-      margin-top: 2rem;
-      color: #94a3b8;
-      font-size: 0.9rem;
-    }
+    h1 { color: #22d3ee; }
   </style>
 </head>
 <body>
-  <h1>🧠 WhatsApp Admin Bot Dashboard</h1>
+  <h1>📱 Scan the QR to connect WhatsApp</h1>
+  <div id="status">Waiting for QR...</div>
+  <div id="qr"></div>
 
-  <div id="qr">
-    <p>Waiting for QR Code...</p>
-  </div>
+  <script>
+    const socket = io("https://wp-admin-bot.onrender.com"); // your backend URL
 
-  <footer>Made by Vivek Mathur | AdminBot</footer>
+    socket.on("qr", (url) => {
+      document.getElementById("status").innerText = "Scan this QR with WhatsApp";
+      document.getElementById("qr").innerHTML = `<img src="${url}" alt="QR Code" width="300"/>`;
+    });
 
-  <!-- Load Socket.IO client -->
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
-  <!-- Main frontend logic -->
-  <script src="./script.js"></script>
+    socket.on("ready", () => {
+      document.getElementById("status").innerText = "✅ WhatsApp Bot is Ready!";
+      document.getElementById("qr").innerHTML = "";
+    });
+  </script>
 </body>
 </html>
