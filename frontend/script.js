@@ -1,50 +1,60 @@
-// Connect to your deployed backend
-const socket = io("https://wp-admin-bot.onrender.com", {
-  transports: ["websocket"],
-});
+// Replace this URL with your backend's Render URL
+const BACKEND_URL = "https://wp-admin-bot.onrender.com";
 
-const statusEl = document.getElementById("status");
-const qrContainer = document.getElementById("qr-container");
+const socket = io(BACKEND_URL);
+
+const status = document.getElementById("status");
 const qrImg = document.getElementById("qr");
-const connectedMsg = document.getElementById("connected");
+const info = document.getElementById("info");
+const reconnectBtn = document.getElementById("reconnect");
 
-// When connected to backend
+// --- Socket Events ---
+
 socket.on("connect", () => {
-  statusEl.textContent = "Connected to backend ✅";
-  statusEl.style.color = "#00ff99";
   console.log("✅ Connected to backend socket");
+  status.textContent = "Connected to backend ✅";
+  reconnectBtn.style.display = "none";
 });
 
-// When backend disconnects
 socket.on("disconnect", () => {
-  statusEl.textContent = "Disconnected ❌";
-  statusEl.style.color = "#ff3333";
-  qrContainer.classList.add("hidden");
-  connectedMsg.classList.add("hidden");
-  console.log("❌ Disconnected from backend");
+  console.warn("⚠️ Disconnected from backend");
+  status.textContent = "Disconnected ❌";
+  info.textContent = "Try reconnecting...";
+  reconnectBtn.style.display = "inline-block";
 });
 
-// Receive QR from backend
-socket.on("qr", (qrData) => {
-  console.log("📱 QR received");
-  qrContainer.classList.remove("hidden");
-  connectedMsg.classList.add("hidden");
-  qrImg.src = qrData;
-  qrImg.alt = "WhatsApp QR Code";
+socket.on("qr", (qrCode) => {
+  console.log("📱 QR Received");
+  qrImg.src = qrCode;
+  info.textContent = "Scan this QR with WhatsApp to log in!";
+  status.textContent = "QR Code Generated ✅";
 });
 
-// When bot is ready
 socket.on("ready", () => {
-  qrContainer.classList.add("hidden");
-  connectedMsg.classList.remove("hidden");
-  console.log("🤖 Bot is ready!");
+  qrImg.src = "";
+  info.textContent = "✅ WhatsApp Bot is Ready!";
+  status.textContent = "Bot Ready 🟢";
 });
 
-// When session is authenticated
 socket.on("authenticated", () => {
-  statusEl.textContent = "Authenticated ✅";
-  statusEl.style.color = "#00ff99";
-  qrContainer.classList.add("hidden");
-  connectedMsg.classList.remove("hidden");
-  console.log("🔐 Authenticated!");
+  info.textContent = "🔐 WhatsApp Authenticated!";
+  status.textContent = "Authenticated ✅";
+});
+
+socket.on("auth_failure", (msg) => {
+  info.textContent = "❌ Authentication Failed: " + msg;
+  status.textContent = "Auth Error ⚠️";
+});
+
+socket.on("disconnected", (reason) => {
+  info.textContent = "⚠️ WhatsApp Disconnected: " + reason;
+  status.textContent = "Disconnected ⚠️";
+  reconnectBtn.style.display = "inline-block";
+});
+
+// --- Reconnect Button ---
+reconnectBtn.addEventListener("click", () => {
+  info.textContent = "🔄 Reconnecting...";
+  reconnectBtn.style.display = "none";
+  socket.connect();
 });
