@@ -3,47 +3,47 @@ import cors from "cors";
 import qrcode from "qrcode";
 import pkg from "whatsapp-web.js";
 import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { dirname } from "path";
 
 const { Client, LocalAuth } = pkg;
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// --- FIXED CORS CONFIG ---
+// --- ✅ FIXED UNIVERSAL CORS HANDLING ---
 app.use(
   cors({
-    origin: [
-      "https://wp-admin-bot-frontend.onrender.com", // your frontend URL
-      "http://localhost:5500", // optional for local testing
-    ],
+    origin: "*", // allow all origins
     methods: ["GET", "POST"],
-    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
+// --- Middleware ---
 app.use(express.json());
 
-// --- Static path ---
+// --- WhatsApp Client Setup ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// --- Initialize WhatsApp client ---
-const client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: { headless: true, args: ["--no-sandbox"] },
-});
 
 let qrCodeData = null;
 let isReady = false;
 
+const client = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  },
+});
+
 client.on("qr", async (qr) => {
-  console.log("QR RECEIVED");
+  console.log("📲 QR RECEIVED");
   qrCodeData = await qrcode.toDataURL(qr);
 });
 
 client.on("ready", () => {
-  console.log("WhatsApp client is ready!");
+  console.log("✅ WhatsApp client is ready!");
   isReady = true;
 });
 
@@ -51,8 +51,9 @@ client.initialize();
 
 // --- Routes ---
 
-// Manual QR generate endpoint
+// Generate or get QR
 app.get("/generate-qr", async (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*"); // extra CORS layer
   if (isReady) {
     return res.json({ status: "ready" });
   } else if (qrCodeData) {
@@ -64,10 +65,10 @@ app.get("/generate-qr", async (req, res) => {
 
 // Test route
 app.get("/", (req, res) => {
-  res.send("✅ WhatsApp Admin Bot Backend is Running");
+  res.send("✅ WP Admin Bot Backend Running Successfully!");
 });
 
-// --- Start server ---
+// --- Start Server ---
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`🚀 Server running on port ${port}`);
 });
