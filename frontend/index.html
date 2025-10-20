@@ -10,14 +10,19 @@
   <div class="container">
     <h1>🤖 WhatsApp Admin Bot</h1>
     <p id="status">Connecting to backend...</p>
+
     <div id="qr-container">
       <img id="qr" src="" alt="QR Code will appear here" />
     </div>
+
     <p id="info"></p>
-    <button id="reconnect" style="display: none;">Reconnect</button>
+
+    <div class="buttons">
+      <button id="generate">Generate QR Code</button>
+      <button id="reconnect" style="display: none;">Reconnect</button>
+    </div>
   </div>
 
-  <!-- Socket.IO client -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="script.js"></script>
 </body>

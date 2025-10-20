@@ -1,14 +1,14 @@
-// Replace this URL with your backend's Render URL
+// Backend URL
 const BACKEND_URL = "https://wp-admin-bot.onrender.com";
 
 const socket = io(BACKEND_URL);
-
 const status = document.getElementById("status");
 const qrImg = document.getElementById("qr");
 const info = document.getElementById("info");
 const reconnectBtn = document.getElementById("reconnect");
+const generateBtn = document.getElementById("generate");
 
-// --- Socket Events ---
+// ===== Socket Events =====
 
 socket.on("connect", () => {
   console.log("✅ Connected to backend socket");
@@ -52,7 +52,27 @@ socket.on("disconnected", (reason) => {
   reconnectBtn.style.display = "inline-block";
 });
 
-// --- Reconnect Button ---
+// ===== Button Handlers =====
+
+// Manual QR Code Generator
+generateBtn.addEventListener("click", async () => {
+  try {
+    info.textContent = "⏳ Requesting new QR Code...";
+    qrImg.src = "";
+    const res = await fetch(`${BACKEND_URL}/generate-qr`);
+    if (res.ok) {
+      info.textContent = "Waiting for QR code from backend...";
+      console.log("🟢 Backend acknowledged QR generation request.");
+    } else {
+      info.textContent = "❌ Failed to request QR generation.";
+    }
+  } catch (err) {
+    info.textContent = "❌ Error contacting backend.";
+    console.error(err);
+  }
+});
+
+// Reconnect manually to socket
 reconnectBtn.addEventListener("click", () => {
   info.textContent = "🔄 Reconnecting...";
   reconnectBtn.style.display = "none";
