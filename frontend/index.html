@@ -1,29 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WhatsApp Admin Bot</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WP Admin Bot</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>🤖 WhatsApp Admin Bot</h1>
-    <p id="status">Connecting to backend...</p>
-
-    <div id="qr-container">
-      <img id="qr" src="" alt="QR Code will appear here" />
-    </div>
-
-    <p id="info"></p>
-
-    <div class="buttons">
-      <button id="generate">Generate QR Code</button>
-      <button id="reconnect" style="display: none;">Reconnect</button>
+    <h1>WhatsApp Admin Bot</h1>
+    <p id="status">Click the button to generate a QR code.</p>
+    <button id="generateBtn">Generate QR Code</button>
+    <div id="qrContainer">
+      <img id="qrImage" alt="QR Code" style="display:none;" />
     </div>
   </div>
-
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
