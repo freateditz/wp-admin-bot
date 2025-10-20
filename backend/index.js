@@ -1,92 +1,103 @@
+// index.js
+
 import express from "express";
 import cors from "cors";
 import qrcode from "qrcode";
-import mongoose from "mongoose";
-import { Client, LocalAuth } from "whatsapp-web.js";
+import pkg from "whatsapp-web.js"; // Import CommonJS package in ESM
+const { Client, LocalAuth } = pkg;
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
-// ✅ CORS setup
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || "http://localhost:5500",
-    "https://wp-admin-bot-frontend.onrender.com"
-  ],
-  credentials: true,
-}));
-
-// ✅ MongoDB connection
-if (process.env.MONGO_URL) {
-  mongoose.connect(process.env.MONGO_URL)
+// ====================================
+// 🔗 MongoDB (optional)
+// ====================================
+const mongoURI = process.env.MONGO_URI;
+if (mongoURI) {
+  mongoose
+    .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log("✅ MongoDB connected"))
-    .catch(err => console.error("❌ MongoDB error:", err));
+    .catch((err) => console.error("❌ MongoDB connection error:", err));
 }
 
+// ====================================
+// ⚙️ WhatsApp Client Setup
+// ====================================
 let qrCodeData = null;
 let isClientReady = false;
 
-// ✅ WhatsApp client setup
 const client = new Client({
-  authStrategy: new LocalAuth({ clientId: "AdminBotSession" }),
-  puppeteer: { headless: true, args: ["--no-sandbox"] },
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  },
 });
 
-client.on("qr", async qr => {
+client.on("qr", async (qr) => {
+  console.log("📱 QR Received");
   qrCodeData = await qrcode.toDataURL(qr);
-  isClientReady = false;
-  console.log("⚡ QR generated");
 });
 
 client.on("ready", () => {
+  console.log("✅ WhatsApp Client is ready!");
   isClientReady = true;
-  qrCodeData = null;
-  console.log("✅ WhatsApp client is ready!");
+  qrCodeData = null; // clear QR once connected
 });
 
-client.on("disconnected", reason => {
-  console.log("⚠️ Disconnected:", reason);
+client.on("disconnected", () => {
+  console.log("❌ WhatsApp Client disconnected!");
   isClientReady = false;
-  qrCodeData = null;
-  client.initialize();
 });
 
 client.initialize();
 
-// ✅ API Routes
+// ====================================
+// 🛠️ Routes
+// ====================================
 
-// 1️⃣ Generate QR manually
-app.get("/generate-qr", (req, res) => {
-  if (isClientReady) {
-    return res.status(200).json({ message: "WhatsApp Client is already connected!" });
-  }
-  if (!qrCodeData) {
-    return res.status(404).json({ message: "QR not generated yet. Wait for a few seconds and retry." });
-  }
-  res.status(200).json({ qr: qrCodeData });
+// Root check
+app.get("/", (req, res) => {
+  res.send("🟢 WhatsApp Bot Backend is running successfully!");
 });
 
-// 2️⃣ Logout endpoint
+// Generate QR manually
+app.get("/generate-qr", async (req, res) => {
+  if (isClientReady) {
+    return res.json({ status: "connected", message: "Client already connected!" });
+  }
+
+  if (!qrCodeData) {
+    return res.json({ status: "pending", message: "QR not yet generated. Wait a few seconds and retry." });
+  }
+
+  res.json({ status: "qr", qr: qrCodeData });
+});
+
+// Check status
+app.get("/status", (req, res) => {
+  res.json({ connected: isClientReady });
+});
+
+// Logout (destroy session)
 app.get("/logout", async (req, res) => {
   try {
     await client.logout();
     isClientReady = false;
     qrCodeData = null;
-    res.status(200).json({ message: "✅ Logged out successfully." });
-  } catch (error) {
-    console.error("Logout error:", error);
-    res.status(500).json({ message: "❌ Logout failed." });
+    res.json({ status: "success", message: "Logged out successfully!" });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).json({ status: "error", message: "Failed to logout" });
   }
 });
 
-// 3️⃣ Default route
-app.get("/", (req, res) => {
-  res.send("✅ Backend is running & connected to WhatsApp bot");
-});
-
-// ✅ Start server
+// ====================================
+// 🚀 Start Server
+// ====================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
