@@ -1,30 +1,53 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const qrContainer = document.getElementById("qrContainer");
-  const qrImage = document.getElementById("qrImage");
-  const generateBtn = document.getElementById("generateBtn");
-  const statusText = document.getElementById("status");
+const backendUrl = "https://wp-admin-bot.onrender.com";
+const statusEl = document.getElementById("status");
+const qrImg = document.getElementById("qr");
+const generateBtn = document.getElementById("generateBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-  async function fetchQR() {
-    statusText.textContent = "⏳ Fetching QR...";
-    try {
-      const res = await fetch("https://wp-admin-bot.onrender.com/generate-qr");
-      const data = await res.json();
+async function checkStatus() {
+  try {
+    const res = await fetch(`${backendUrl}/`);
+    const data = await res.json();
 
-      if (data.qr) {
-        qrImage.src = data.qr;
-        qrImage.style.display = "block";
-        statusText.textContent = "📱 Scan this QR using WhatsApp";
-      } else if (data.status === "ready") {
-        statusText.textContent = "✅ WhatsApp Client is already connected!";
-        qrImage.style.display = "none";
-      } else {
-        statusText.textContent = "⚙️ Waiting for QR generation...";
-      }
-    } catch (error) {
-      statusText.textContent = "❌ Unable to connect to backend.";
-      console.error(error);
+    if (data.message.includes("connected")) {
+      statusEl.innerHTML = "✅ WhatsApp Client is already connected!";
+      qrImg.style.display = "none";
+    } else {
+      statusEl.innerHTML = "📱 Bot not connected. Click 'Generate QR Code' below.";
     }
+  } catch (err) {
+    statusEl.innerHTML = "❌ Unable to reach backend.";
   }
+}
 
-  generateBtn.addEventListener("click", fetchQR);
+generateBtn.addEventListener("click", async () => {
+  try {
+    statusEl.innerHTML = "⏳ Generating QR...";
+    const res = await fetch(`${backendUrl}/generate-qr`);
+    const data = await res.json();
+
+    if (data.success && data.qr) {
+      qrImg.src = data.qr;
+      qrImg.style.display = "block";
+      statusEl.innerHTML = "📱 Scan this QR with WhatsApp to connect.";
+    } else {
+      statusEl.innerHTML = data.message || "⚠️ QR not ready, try again.";
+      qrImg.style.display = "none";
+    }
+  } catch (err) {
+    statusEl.innerHTML = "❌ Error generating QR.";
+  }
 });
+
+logoutBtn.addEventListener("click", async () => {
+  try {
+    const res = await fetch(`${backendUrl}/logout`);
+    const data = await res.json();
+    statusEl.innerHTML = data.message || "Logged out.";
+    qrImg.style.display = "none";
+  } catch (err) {
+    statusEl.innerHTML = "❌ Error logging out.";
+  }
+});
+
+checkStatus();
