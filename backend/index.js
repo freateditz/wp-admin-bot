@@ -1,145 +1,73 @@
-// ===============================
-// 📱 WhatsApp Admin Bot Backend
-// ===============================
-
 import express from "express";
-import { createServer } from "http";
-import { Server } from "socket.io";
 import cors from "cors";
 import qrcode from "qrcode";
-import dotenv from "dotenv";
 import pkg from "whatsapp-web.js";
-
-dotenv.config();
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 const { Client, LocalAuth } = pkg;
 
-// -------------------------------
-// 🔧 Server + Config Setup
-// -------------------------------
 const app = express();
-const server = createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || "*",
+const port = process.env.PORT || 5000;
+
+// --- FIXED CORS CONFIG ---
+app.use(
+  cors({
+    origin: [
+      "https://wp-admin-bot-frontend.onrender.com", // your frontend URL
+      "http://localhost:5500", // optional for local testing
+    ],
     methods: ["GET", "POST"],
-  },
-});
+    credentials: true,
+  })
+);
 
-const PORT = process.env.PORT || 5000;
-let client;
-let qrRequested = false;
-
-// -------------------------------
-// 🧩 Middlewares
-// -------------------------------
-app.use(cors());
 app.use(express.json());
 
-// -------------------------------
-// ⚡ Manual QR Code Trigger Route
-// -------------------------------
+// --- Static path ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// --- Initialize WhatsApp client ---
+const client = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: { headless: true, args: ["--no-sandbox"] },
+});
+
+let qrCodeData = null;
+let isReady = false;
+
+client.on("qr", async (qr) => {
+  console.log("QR RECEIVED");
+  qrCodeData = await qrcode.toDataURL(qr);
+});
+
+client.on("ready", () => {
+  console.log("WhatsApp client is ready!");
+  isReady = true;
+});
+
+client.initialize();
+
+// --- Routes ---
+
+// Manual QR generate endpoint
 app.get("/generate-qr", async (req, res) => {
-  try {
-    console.log("🔄 Manual QR generation requested...");
-
-    qrRequested = true;
-
-    // Destroy old client if exists
-    if (client) {
-      try {
-        await client.destroy();
-      } catch (err) {
-        console.error("⚠️ Error destroying old client:", err);
-      }
-    }
-
-    // Reinitialize WhatsApp client
-    initializeClient();
-    res.status(200).send("✅ QR generation started...");
-  } catch (err) {
-    console.error("❌ Error generating QR:", err);
-    res.status(500).send("Error generating QR");
+  if (isReady) {
+    return res.json({ status: "ready" });
+  } else if (qrCodeData) {
+    return res.json({ qr: qrCodeData });
+  } else {
+    return res.json({ status: "waiting-for-qr" });
   }
 });
 
-// -------------------------------
-// ⚙️ WhatsApp Client Initialization
-// -------------------------------
-function initializeClient() {
-  client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: {
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    },
-  });
-
-  // ✅ QR Event
-  client.on("qr", async (qr) => {
-    if (!qrRequested) return; // Only send QR when user clicked “Generate QR”
-    try {
-      const qrImage = await qrcode.toDataURL(qr);
-      console.log("📱 QR generated and sent to frontend");
-      io.emit("qr", qrImage);
-      qrRequested = false;
-    } catch (err) {
-      console.error("❌ Failed to generate QR:", err);
-    }
-  });
-
-  // ✅ When WhatsApp is Ready
-  client.on("ready", () => {
-    console.log("🤖 WhatsApp Bot is Ready!");
-    io.emit("ready");
-  });
-
-  // ✅ Authenticated
-  client.on("authenticated", () => {
-    console.log("🔐 WhatsApp Authenticated");
-    io.emit("authenticated");
-  });
-
-  // ❌ Auth Failure
-  client.on("auth_failure", (msg) => {
-    console.error("❌ Authentication Failed:", msg);
-    io.emit("auth_failure", msg);
-  });
-
-  // ⚠️ Disconnected
-  client.on("disconnected", (reason) => {
-    console.warn("⚠️ WhatsApp Disconnected:", reason);
-    io.emit("disconnected", reason);
-    setTimeout(initializeClient, 5000); // Reconnect automatically
-  });
-
-  // 🧠 Initialize the Client
-  client.initialize();
-}
-
-// -------------------------------
-// 🔌 Socket.io Connection
-// -------------------------------
-io.on("connection", (socket) => {
-  console.log("🟢 Frontend connected to backend via Socket.io");
-  socket.emit("status", "Connected to backend socket ✅");
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Frontend disconnected");
-  });
-});
-
-// -------------------------------
-// 🌐 Base Route
-// -------------------------------
+// Test route
 app.get("/", (req, res) => {
-  res.send("✅ WhatsApp Admin Bot Backend is Running!");
+  res.send("✅ WhatsApp Admin Bot Backend is Running");
 });
 
-// -------------------------------
-// 🚀 Start Server
-// -------------------------------
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  initializeClient();
+// --- Start server ---
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
